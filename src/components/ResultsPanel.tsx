@@ -6,7 +6,7 @@ interface ResultsPanelProps {
   dbStatus: { ok: boolean; tables: string[] };
   apiStatus: { ok: boolean; platformName: string | null };
   wsName: string;
-  chatData?: Contact[];
+  chatData?: Contact[] | null;
 }
 
 export function ResultsPanel({ apiStatus, wsName, chatData }: ResultsPanelProps) {
