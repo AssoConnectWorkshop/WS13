@@ -35,7 +35,7 @@ export function PieChartView({ data }: PieChartViewProps) {
             cy="50%"
             labelLine={false}
             label={({ name, value, percent }) =>
-              `${name}: ${value} (${(percent * 100).toFixed(1)}%)`
+              `${name}: ${value} (${((percent ?? 0) * 100).toFixed(1)}%)`
             }
             outerRadius={120}
             fill="#8884d8"
