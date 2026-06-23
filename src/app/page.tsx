@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { getOrganization } from "@/lib/assoconnect";
+import { getOrganization, getContacts } from "@/lib/assoconnect";
 import { createClient } from "@/lib/supabase/server";
 import { ChatInterface } from "@/components/ChatInterface";
 import { ResultsPanel } from "@/components/ResultsPanel";
@@ -26,8 +26,25 @@ async function testApi(): Promise<{ ok: boolean; platformName: string | null }> 
   }
 }
 
+async function getFirstContact(): Promise<{ ok: boolean; contact: { firstname?: string; lastname: string } | null }> {
+  try {
+    const contacts = await getContacts();
+    if (contacts.length === 0) {
+      return { ok: false, contact: null };
+    }
+    const contact = contacts[0];
+    return { ok: true, contact: { firstname: contact.firstname, lastname: contact.lastname } };
+  } catch {
+    return { ok: false, contact: null };
+  }
+}
+
 export default async function Home() {
-  const [db, api] = await Promise.all([testDatabase(), testApi()]);
+  const [db, api, contactResult] = await Promise.all([
+    testDatabase(),
+    testApi(),
+    getFirstContact(),
+  ]);
   const wsName = (await import("@/config/site")).siteConfig.name;
 
   return (
@@ -38,7 +55,12 @@ export default async function Home() {
 
       <ChatInterface />
 
-      <ResultsPanel dbStatus={db} apiStatus={api} wsName={wsName} />
+      <ResultsPanel
+        dbStatus={db}
+        apiStatus={api}
+        wsName={wsName}
+        contactData={contactResult}
+      />
     </main>
   );
 }

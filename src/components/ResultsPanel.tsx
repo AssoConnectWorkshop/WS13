@@ -4,6 +4,7 @@ interface ResultsPanelProps {
   dbStatus: { ok: boolean; tables: string[] };
   apiStatus: { ok: boolean; platformName: string | null };
   wsName: string;
+  contactData?: { ok: boolean; contact: { firstname?: string; lastname: string } | null };
 }
 
 function StatusIcon({ ok }: { ok: boolean }) {
@@ -14,7 +15,7 @@ function StatusIcon({ ok }: { ok: boolean }) {
   );
 }
 
-export function ResultsPanel({ dbStatus, apiStatus, wsName }: ResultsPanelProps) {
+export function ResultsPanel({ dbStatus, apiStatus, wsName, contactData }: ResultsPanelProps) {
   return (
     <div className="w-full md:w-1/2 flex flex-col items-center justify-center gap-8 p-8 bg-gray-50">
       <div className="flex flex-col items-center gap-4">
@@ -23,6 +24,24 @@ export function ResultsPanel({ dbStatus, apiStatus, wsName }: ResultsPanelProps)
       </div>
 
       <div className="flex flex-col gap-6 w-full max-w-md">
+        <div className="border border-gray-300 rounded-xl p-6 flex flex-col gap-3 bg-white shadow-sm hover:shadow-md transition-shadow">
+          <div className="flex items-center gap-3">
+            <StatusIcon ok={contactData?.ok ?? false} />
+            <h2 className="text-lg font-semibold">Sample contact from API</h2>
+          </div>
+          {contactData?.ok && contactData?.contact && (
+            <p className="text-sm text-gray-600">
+              Name: <span className="font-medium">
+                {contactData.contact.firstname && `${contactData.contact.firstname} `}
+                {contactData.contact.lastname}
+              </span>
+            </p>
+          )}
+          {!contactData?.ok && (
+            <p className="text-sm text-red-600">No contacts found</p>
+          )}
+        </div>
+
         <div className="border border-gray-300 rounded-xl p-6 flex flex-col gap-3 bg-white shadow-sm hover:shadow-md transition-shadow">
           <div className="flex items-center gap-3">
             <StatusIcon ok={dbStatus.ok} />

@@ -15,6 +15,23 @@ export type Organization = {
   url: string;
 };
 
+export type Contact = {
+  "@id": string;
+  "@type": string;
+  type: "person" | "structure";
+  firstname?: string;
+  lastname: string;
+  email?: string;
+  landlinePhone?: string;
+  mobilePhone?: string;
+};
+
+type ContactsResponse = {
+  "@type": string;
+  "hydra:member": Contact[];
+  "hydra:totalItems": number;
+};
+
 async function request<T>(path: string): Promise<T> {
   const token = process.env.ASSOCONNECT_API_KEY;
   if (!token) throw new Error("ASSOCONNECT_API_KEY is not set");
@@ -37,4 +54,14 @@ async function request<T>(path: string): Promise<T> {
 export function getOrganization(ulid = process.env.ASSOCONNECT_ORGANIZATION_ULID) {
   if (!ulid) throw new Error("ASSOCONNECT_ORGANIZATION_ULID is not set");
   return request<Organization>(`/organizations/${ulid}`);
+}
+
+export async function getContacts(
+  organizationUlid = process.env.ASSOCONNECT_ORGANIZATION_ULID
+): Promise<Contact[]> {
+  if (!organizationUlid) throw new Error("ASSOCONNECT_ORGANIZATION_ULID is not set");
+  const response = await request<ContactsResponse>(
+    `/organizations/${organizationUlid}/contacts?itemsPerPage=100`
+  );
+  return response["hydra:member"];
 }
