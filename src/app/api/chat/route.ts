@@ -15,6 +15,7 @@ interface ParsedAction {
   status: 'ready_to_fetch' | 'needs_clarification';
   message: string;
   action?: string;
+  visualizationType?: 'table' | 'bar' | 'pie' | 'summary';
   filters?: {
     type?: string | null;
     limit?: number;
@@ -36,6 +37,14 @@ The system has a contacts database with the following fields for each contact:
 
 You can retrieve up to 100 contacts at a time.
 
+## Visualization Types
+
+Choose the most appropriate visualization type based on the data:
+- **table**: For detailed contact lists with multiple fields. Use when users want to see comprehensive information.
+- **bar**: For comparisons (e.g., count of persons vs structures, distribution across types).
+- **pie**: For proportional data (e.g., percentage of persons vs structures).
+- **summary**: For a quick overview with key statistics and metrics.
+
 ## How to Respond
 
 1. **First interaction**: Ask clarifying questions to understand what data the user wants to see. Always ask at least one clarifying question to confirm you understand their request. For example:
@@ -49,6 +58,7 @@ You can retrieve up to 100 contacts at a time.
      "status": "ready_to_fetch",
      "message": "I'll fetch the contacts with the following criteria: [describe what you'll fetch]",
      "action": "fetch_contacts",
+     "visualizationType": "table|bar|pie|summary",
      "filters": {
        "type": "person|structure|null",
        "limit": 100
@@ -68,7 +78,8 @@ You can retrieve up to 100 contacts at a time.
 - Always ask at least one clarifying question before attempting to fetch data
 - Be conversational and helpful
 - If the user's request is unclear, ask for clarification
-- Suggest relevant filters and fields based on their use case`;
+- Suggest relevant filters and fields based on their use case
+- Always choose the visualization type that best represents the data`;
 
 export async function POST(request: NextRequest) {
   try {
@@ -140,6 +151,7 @@ export async function POST(request: NextRequest) {
           role: 'assistant',
           content: assistantMessage,
           data: filtered,
+          visualizationType: parsedAction.visualizationType || 'table',
           status: 'data_ready',
         });
       } catch (error) {

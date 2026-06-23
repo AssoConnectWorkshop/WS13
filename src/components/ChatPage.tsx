@@ -13,9 +13,13 @@ interface ChatPageProps {
 
 export function ChatPage({ dbStatus, apiStatus, wsName }: ChatPageProps) {
   const [chatData, setChatData] = useState<Contact[] | null>(null);
+  const [visualizationType, setVisualizationType] = useState<'table' | 'bar' | 'pie' | 'summary'>('table');
 
-  const handleDataReceived = (data: Contact[]) => {
+  const handleDataReceived = (data: Contact[], vizType?: string) => {
     setChatData(data);
+    if (vizType === 'table' || vizType === 'bar' || vizType === 'pie' || vizType === 'summary') {
+      setVisualizationType(vizType);
+    }
   };
 
   return (
@@ -26,6 +30,7 @@ export function ChatPage({ dbStatus, apiStatus, wsName }: ChatPageProps) {
         apiStatus={apiStatus}
         wsName={wsName}
         chatData={chatData}
+        visualizationType={visualizationType}
       />
     </>
   );

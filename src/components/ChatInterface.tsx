@@ -9,9 +9,10 @@ interface Message {
   content: string;
   timestamp: Date;
   data?: Contact[];
+  visualizationType?: 'table' | 'bar' | 'pie' | 'summary';
 }
 
-export function ChatInterface({ onDataReceived }: { onDataReceived?: (data: Contact[]) => void }) {
+export function ChatInterface({ onDataReceived }: { onDataReceived?: (data: Contact[], visualizationType?: string) => void }) {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
@@ -73,13 +74,14 @@ export function ChatInterface({ onDataReceived }: { onDataReceived?: (data: Cont
         content: data.content,
         timestamp: new Date(),
         data: data.data,
+        visualizationType: data.visualizationType,
       };
 
       setMessages((prev) => [...prev, assistantMessage]);
 
       // Notify parent component if data is available
       if (data.data && data.status === 'data_ready' && onDataReceived) {
-        onDataReceived(data.data);
+        onDataReceived(data.data, data.visualizationType);
       }
     } catch (error) {
       const errorMessage: Message = {
