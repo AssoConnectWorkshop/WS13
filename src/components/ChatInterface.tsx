@@ -7,14 +7,15 @@ interface Message {
   role: 'user' | 'assistant';
   content: string;
   timestamp: Date;
+  data?: any;
 }
 
-export function ChatInterface() {
+export function ChatInterface({ onDataReceived }: { onDataReceived?: (data: any) => void }) {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
       role: 'assistant',
-      content: "Hello! I'm your AI assistant. How can I help you today?",
+      content: "Hi! I can help you query the AssoConnect database. What contacts or information would you like to see? For example, you could ask to see all contacts, contacts by type, or specific contact information.",
       timestamp: new Date(),
     },
   ]);
@@ -45,16 +46,51 @@ export function ChatInterface() {
     setInput('');
     setIsLoading(true);
 
-    setTimeout(() => {
+    try {
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: messages
+            .filter((m) => m.role !== 'assistant' || !m.data)
+            .map((m) => ({
+              role: m.role,
+              content: m.content,
+            }))
+            .concat({
+              role: 'user',
+              content: input,
+            }),
+        }),
+      });
+
+      const data = await response.json();
+
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: `I received your message: "${userMessage.content}". This is a demo chatbot interface.`,
+        content: data.content,
+        timestamp: new Date(),
+        data: data.data,
+      };
+
+      setMessages((prev) => [...prev, assistantMessage]);
+
+      // Notify parent component if data is available
+      if (data.data && data.status === 'data_ready' && onDataReceived) {
+        onDataReceived(data.data);
+      }
+    } catch (error) {
+      const errorMessage: Message = {
+        id: (Date.now() + 2).toString(),
+        role: 'assistant',
+        content: `Error: ${error instanceof Error ? error.message : 'Failed to process request'}`,
         timestamp: new Date(),
       };
-      setMessages((prev) => [...prev, assistantMessage]);
+      setMessages((prev) => [...prev, errorMessage]);
+    } finally {
       setIsLoading(false);
-    }, 500);
+    }
   };
 
   return (
@@ -102,7 +138,7 @@ export function ChatInterface() {
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Type your message..."
+            placeholder="Ask about contacts..."
             disabled={isLoading}
             className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
           />
