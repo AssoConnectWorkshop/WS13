@@ -71,6 +71,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (!process.env.ANTHROPIC_API_KEY) {
+      return NextResponse.json(
+        {
+          role: 'assistant',
+          content:
+            'Error: ANTHROPIC_API_KEY is not configured. Please add it to your environment variables.',
+          status: 'error',
+        },
+        { status: 500 }
+      );
+    }
+
     // Call Claude Haiku to interpret the request
     const response = await client.messages.create({
       model: 'claude-3-5-haiku-20241022',
@@ -119,6 +131,7 @@ export async function POST(request: NextRequest) {
           status: 'data_ready',
         });
       } catch (error) {
+        console.error('Error fetching contacts:', error);
         return NextResponse.json({
           role: 'assistant',
           content: `I encountered an error while fetching contacts: ${error instanceof Error ? error.message : 'Unknown error'}. Please try again.`,
@@ -136,7 +149,11 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Chat API error:', error);
     return NextResponse.json(
-      { error: 'Failed to process request' },
+      {
+        role: 'assistant',
+        content: `Error: ${error instanceof Error ? error.message : 'Failed to process request'}`,
+        status: 'error',
+      },
       { status: 500 }
     );
   }
