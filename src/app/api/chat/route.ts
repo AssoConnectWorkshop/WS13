@@ -113,21 +113,23 @@ export async function POST(request: NextRequest) {
       const jsonMatch = assistantMessage.match(/```json\n([\s\S]*?)\n```/);
       if (jsonMatch) {
         parsedAction = JSON.parse(jsonMatch[1]);
-        shouldFetchData = parsedAction.status === 'ready_to_fetch';
+        if (parsedAction && parsedAction.status === 'ready_to_fetch') {
+          shouldFetchData = true;
+        }
       }
     } catch {
       parseError = true;
     }
 
     // If Claude wants to fetch and has action="fetch_contacts", do it
-    if (shouldFetchData && parsedAction?.action === 'fetch_contacts') {
+    if (shouldFetchData && parsedAction && parsedAction.action === 'fetch_contacts') {
       try {
         const contacts = await getContacts();
 
         // Filter if needed
         let filtered = contacts;
         if (parsedAction.filters?.type) {
-          filtered = contacts.filter((c) => c.type === parsedAction.filters.type);
+          filtered = contacts.filter((c) => c.type === parsedAction.filters?.type);
         }
 
         // Limit results
