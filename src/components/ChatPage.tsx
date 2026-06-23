@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import type { Contact } from '@/types';
 import { ChatInterface } from './ChatInterface';
 import { ResultsPanel } from './ResultsPanel';
 
@@ -11,9 +12,9 @@ interface ChatPageProps {
 }
 
 export function ChatPage({ dbStatus, apiStatus, wsName }: ChatPageProps) {
-  const [chatData, setChatData] = useState<any>(null);
+  const [chatData, setChatData] = useState<Contact[] | null>(null);
 
-  const handleDataReceived = (data: any) => {
+  const handleDataReceived = (data: Contact[]) => {
     setChatData(data);
   };
 

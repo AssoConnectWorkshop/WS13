@@ -1,22 +1,15 @@
 import Image from 'next/image';
+import type { Contact } from '@/types';
 import { APP_VERSION } from '@/lib/version';
 
 interface ResultsPanelProps {
   dbStatus: { ok: boolean; tables: string[] };
   apiStatus: { ok: boolean; platformName: string | null };
   wsName: string;
-  chatData?: any;
+  chatData?: Contact[];
 }
 
-function StatusIcon({ ok }: { ok: boolean }) {
-  return ok ? (
-    <span className="text-green-500 text-2xl">✓</span>
-  ) : (
-    <span className="text-red-500 text-2xl">✗</span>
-  );
-}
-
-export function ResultsPanel({ dbStatus, apiStatus, wsName, chatData }: ResultsPanelProps) {
+export function ResultsPanel({ apiStatus, wsName, chatData }: ResultsPanelProps) {
   return (
     <div className="w-full md:w-1/2 flex flex-col bg-gray-50 overflow-y-auto relative">
       <div className="absolute top-4 right-4 text-xs font-mono bg-gray-200 text-gray-700 px-2 py-1 rounded">
@@ -48,7 +41,7 @@ export function ResultsPanel({ dbStatus, apiStatus, wsName, chatData }: ResultsP
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {chatData.map((contact: any, index: number) => (
+                {chatData.map((contact: Contact, index: number) => (
                   <tr key={index} className="hover:bg-gray-50">
                     <td className="px-6 py-4 text-sm text-gray-900">
                       {contact.firstname || '—'}

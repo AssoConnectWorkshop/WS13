@@ -1,16 +1,17 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import type { Contact } from '@/types';
 
 interface Message {
   id: string;
   role: 'user' | 'assistant';
   content: string;
   timestamp: Date;
-  data?: any;
+  data?: Contact[];
 }
 
-export function ChatInterface({ onDataReceived }: { onDataReceived?: (data: any) => void }) {
+export function ChatInterface({ onDataReceived }: { onDataReceived?: (data: Contact[]) => void }) {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
