@@ -11,6 +11,16 @@ interface ChatMessage {
   content: string;
 }
 
+interface ParsedAction {
+  status: 'ready_to_fetch' | 'needs_clarification';
+  message: string;
+  action?: string;
+  filters?: {
+    type?: string | null;
+    limit?: number;
+  };
+}
+
 const SYSTEM_PROMPT = `You are a helpful assistant that helps users query the AssoConnect API to extract contact and organization data.
 
 ## Available Data in AssoConnect API
@@ -97,7 +107,7 @@ export async function POST(request: NextRequest) {
     // Check if Claude wants to fetch data
     let shouldFetchData = false;
     let parseError = false;
-    let parsedAction: any = null;
+    let parsedAction: ParsedAction | null = null;
 
     try {
       const jsonMatch = assistantMessage.match(/```json\n([\s\S]*?)\n```/);
