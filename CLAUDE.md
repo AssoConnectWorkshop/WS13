@@ -5,7 +5,7 @@ Next.js 15 App Router · TypeScript · Tailwind CSS v4 · Supabase · AssoConnec
 ## Stack
 - **Tailwind v4**: `@import "tailwindcss"` in globals.css — no `@tailwind` directives, no `@apply` without `@reference`.
 - **Supabase**: `@supabase/ssr` — `src/lib/supabase/server.ts` for server code, `src/lib/supabase/client.ts` for the browser.
-- **AssoConnect API**: server-only client at `src/lib/assoconnect.ts`. Base URL `https://app.assoconnect.com/api/v1`, header `X-AUTH-TOKEN`, `Accept: application/ld+json`. Rate limit: 30 req/s, CRM scope only.
+- **AssoConnect API**: server-only client at `src/lib/assoconnect.ts`. Base URL `https://app.assoconnect.com/api/v1`, header `X-AUTH-TOKEN`, `Accept: application/ld+json`. Rate limit: 30 req/s. Hydra/JSON-LD responses (`hydra:member`, `hydra:totalItems`, `hydra:view`). **~404 endpoints across 7 modules** — CRM, Emailing, Accounting, Payment, Business Account, Website (collects/events/memberships), Others. Full reference in `docs/api/*.md`; use the `assoConnect` / `fetchCollection` helpers to add new typed endpoints. See the `assoconnect-api` skill before integrating a new endpoint.
 - **Config-driven**: navigation and site values in `src/config/site.ts`.
 
 ## Workflow

@@ -26,13 +26,17 @@ export type Contact = {
   mobilePhone?: string;
 };
 
-type ContactsResponse = {
+export type HydraCollection<T> = {
   "@type": string;
-  "hydra:member": Contact[];
+  "hydra:member": T[];
   "hydra:totalItems": number;
+  "hydra:view"?: {
+    "hydra:next"?: string;
+    "hydra:last"?: string;
+  };
 };
 
-async function request<T>(path: string): Promise<T> {
+export async function assoConnect<T>(path: string): Promise<T> {
   const token = process.env.ASSOCONNECT_API_KEY;
   if (!token) throw new Error("ASSOCONNECT_API_KEY is not set");
 
@@ -51,17 +55,33 @@ async function request<T>(path: string): Promise<T> {
   return res.json() as Promise<T>;
 }
 
+export async function fetchCollection<T>(
+  path: string,
+  { maxItems = 100 }: { maxItems?: number } = {}
+): Promise<T[]> {
+  const items: T[] = [];
+  let next: string | null = path;
+
+  while (next && items.length < maxItems) {
+    const page: HydraCollection<T> = await assoConnect<HydraCollection<T>>(next);
+    items.push(...page["hydra:member"]);
+    const view = page["hydra:view"]?.["hydra:next"];
+    next = view ? view.replace("/api/v1", "") : null;
+  }
+
+  return items.slice(0, maxItems);
+}
+
 export function getOrganization(ulid = process.env.ASSOCONNECT_ORGANIZATION_ULID) {
   if (!ulid) throw new Error("ASSOCONNECT_ORGANIZATION_ULID is not set");
-  return request<Organization>(`/organizations/${ulid}`);
+  return assoConnect<Organization>(`/organizations/${ulid}`);
 }
 
 export async function getContacts(
   organizationUlid = process.env.ASSOCONNECT_ORGANIZATION_ULID
 ): Promise<Contact[]> {
   if (!organizationUlid) throw new Error("ASSOCONNECT_ORGANIZATION_ULID is not set");
-  const response = await request<ContactsResponse>(
+  return fetchCollection<Contact>(
     `/organizations/${organizationUlid}/contacts?itemsPerPage=100`
   );
-  return response["hydra:member"];
 }
