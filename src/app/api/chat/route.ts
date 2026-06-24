@@ -186,9 +186,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Call Claude Haiku to interpret the request
+    // Call Claude Sonnet to interpret the request
     const response = await client.messages.create({
-      model: 'claude-haiku-4-5-20251001',
+      model: 'claude-sonnet-4-6',
       max_tokens: 500,
       system: SYSTEM_PROMPT,
       messages: messages,
