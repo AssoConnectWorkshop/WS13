@@ -189,13 +189,16 @@ export async function POST(request: NextRequest) {
     // Call Claude Sonnet to interpret the request
     const response = await client.messages.create({
       model: 'claude-sonnet-4-6',
-      max_tokens: 500,
+      max_tokens: 2000,
+      thinking: { type: 'adaptive' },
       system: SYSTEM_PROMPT,
       messages: messages,
     });
 
-    const assistantMessage =
-      response.content[0].type === 'text' ? response.content[0].text : '';
+    // With adaptive thinking, the response may lead with thinking blocks —
+    // read the text block rather than assuming index 0.
+    const textBlock = response.content.find((block) => block.type === 'text');
+    const assistantMessage = textBlock?.type === 'text' ? textBlock.text : '';
 
     // Parse Claude's intent (fetch, create, or clarification)
     let parseError = false;
