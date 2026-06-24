@@ -12,15 +12,15 @@ interface Message {
   visualizationType?: 'table' | 'bar' | 'pie' | 'summary';
 }
 
+const createInitialMessage = (): Message => ({
+  id: '1',
+  role: 'assistant',
+  content: "Hi! I can help you query the AssoConnect database. What contacts or information would you like to see? For example, you could ask to see all contacts, contacts by type, or specific contact information.",
+  timestamp: new Date(),
+});
+
 export function ChatInterface({ onDataReceived }: { onDataReceived?: (data: Contact[], visualizationType?: string) => void }) {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: '1',
-      role: 'assistant',
-      content: "Hi! I can help you query the AssoConnect database. What contacts or information would you like to see? For example, you could ask to see all contacts, contacts by type, or specific contact information.",
-      timestamp: new Date(),
-    },
-  ]);
+  const [messages, setMessages] = useState<Message[]>([createInitialMessage()]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -82,6 +82,14 @@ export function ChatInterface({ onDataReceived }: { onDataReceived?: (data: Cont
       // Notify parent component if data is available
       if (data.data && data.status === 'data_ready' && onDataReceived) {
         onDataReceived(data.data, data.visualizationType);
+      }
+
+      // Reset message history after action completion (data_ready or created)
+      // This prevents the chatbot from retrying old requests on the next input
+      if (data.status === 'data_ready' || data.status === 'created') {
+        setTimeout(() => {
+          setMessages([createInitialMessage()]);
+        }, 500);
       }
     } catch (error) {
       const errorMessage: Message = {
