@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.0.12';
+export const APP_VERSION = '1.0.13';
 
 export function incrementVersion(version: string): string {
   const parts = version.split('.');
