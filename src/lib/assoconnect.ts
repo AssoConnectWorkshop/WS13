@@ -162,11 +162,32 @@ export function getOrganization(ulid = process.env.ASSOCONNECT_ORGANIZATION_ULID
   return assoConnect<Organization>(`/organizations/${ulid}`);
 }
 
+type RawContact = Omit<Contact, "type"> & {
+  type?: string;
+  name?: string;
+};
+
+// AssoConnect can surface the person/structure discriminator in different shapes
+// (the `type` field, the JSON-LD `@type`, or neither). A strict
+// `type === "person"` check downstream silently mislabels anything else as a
+// structure, so normalize to a clean union once, here.
+function normalizeContactType(raw: RawContact): "person" | "structure" {
+  const signal = [raw.type, raw["@type"]].find(
+    (value): value is string => typeof value === "string" && /^(person|structure)$/i.test(value)
+  );
+  if (signal) return signal.toLowerCase() as "person" | "structure";
+
+  // No explicit marker: fall back to the data model — a structure (personne
+  // morale) carries a `name` and no firstname, a person has a firstname.
+  return raw.firstname ? "person" : "structure";
+}
+
 export async function getContacts(
   organizationUlid = process.env.ASSOCONNECT_ORGANIZATION_ULID
 ): Promise<Contact[]> {
   if (!organizationUlid) throw new Error("ASSOCONNECT_ORGANIZATION_ULID is not set");
-  return fetchCollection<Contact>(
+  const contacts = await fetchCollection<RawContact>(
     `/organizations/${organizationUlid}/contacts?itemsPerPage=100`
   );
+  return contacts.map((raw) => ({ ...raw, type: normalizeContactType(raw) }));
 }
