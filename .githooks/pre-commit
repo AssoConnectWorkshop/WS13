@@ -1,0 +1,6 @@
+#!/bin/sh
+# Auto-increment version before commit
+node scripts/bump-version.mjs
+
+# Add the updated version file to the commit
+git add src/lib/version.ts
