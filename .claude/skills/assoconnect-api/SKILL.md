@@ -41,8 +41,16 @@ Do NOT assume CRM-only. The key fact: this API covers the whole AssoConnect plat
 
 - `assoConnect<T>(path)` — single typed GET against the base URL with auth. Use for a single resource.
 - `fetchCollection<T>(path, { maxItems })` — follows `hydra:view.hydra:next` and flattens `hydra:member` across pages (default cap 100). Use for list endpoints.
+- `assoConnectWrite<T>(path, body, method?)` — POST/PUT/PATCH with `Content-Type: application/json`. Surfaces the API error body in the thrown message. Use for creates/updates.
 
-Both are server-only (`import "server-only"` at top of file).
+All are server-only (`import "server-only"` at top of file).
+
+### Write wrappers already implemented
+- `createContact(input)` — `POST /crm/contacts`. Auto-affiliates to the org (`relations` defaults to `AFFILIATION` with `ASSOCONNECT_ORGANIZATION_ULID`).
+- `createAddress(input)` — `POST /crm/addresses`. Needs a `person` IRI + street1/city/country.
+- `linkPersonToStructure(input)` — `POST /crm/structure_belonging_people`. Needs `person` and `structure` IRIs.
+
+⚠️ Writes hit **production** AssoConnect data and are irreversible from here. The chatbot must confirm details with the user before emitting a `ready_to_create` action. Whether a write succeeds depends on the API key's scope (a CRM key may 403 on accounting/banking writes).
 
 ## Adding a new endpoint — the pattern
 
