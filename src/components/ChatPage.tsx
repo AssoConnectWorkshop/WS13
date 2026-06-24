@@ -23,7 +23,7 @@ export function ChatPage({ dbStatus, apiStatus, wsName }: ChatPageProps) {
   };
 
   return (
-    <>
+    <div className="flex w-full h-screen">
       <ChatInterface onDataReceived={handleDataReceived} />
       <ResultsPanel
         dbStatus={dbStatus}
@@ -32,6 +32,6 @@ export function ChatPage({ dbStatus, apiStatus, wsName }: ChatPageProps) {
         chatData={chatData}
         visualizationType={visualizationType}
       />
-    </>
+    </div>
   );
 }

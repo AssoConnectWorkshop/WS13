@@ -97,7 +97,7 @@ export function ChatInterface({ onDataReceived }: { onDataReceived?: (data: Cont
   };
 
   return (
-    <div className="w-full md:w-1/2 flex flex-col bg-white border-r border-gray-200">
+    <div className="w-full md:w-1/2 h-full flex flex-col bg-white border-r border-gray-200">
       <div className="flex-1 overflow-y-auto p-6 space-y-4">
         {messages.map((message) => (
           <div

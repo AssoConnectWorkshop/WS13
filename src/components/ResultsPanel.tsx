@@ -1,3 +1,6 @@
+'use client';
+
+import { useEffect, useRef } from 'react';
 import Image from 'next/image';
 import type { Contact } from '@/types';
 import { APP_VERSION } from '@/lib/version';
@@ -20,9 +23,20 @@ export function ResultsPanel({
   chatData,
   visualizationType = 'table',
 }: ResultsPanelProps) {
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (chatData && chatData.length > 0 && scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTop = 0;
+    }
+  }, [chatData]);
+
   return (
-    <div className="w-full md:w-1/2 flex flex-col bg-gray-50 overflow-y-auto relative">
-      <div className="absolute top-4 right-4 text-xs font-mono bg-gray-200 text-gray-700 px-2 py-1 rounded">
+    <div
+      ref={scrollContainerRef}
+      className="w-full md:w-1/2 h-full flex flex-col bg-gray-50 overflow-y-auto relative"
+    >
+      <div className="sticky top-0 z-10 text-xs font-mono bg-gray-200 text-gray-700 px-2 py-1 rounded right-4 m-4 w-fit ml-auto">
         v{APP_VERSION}
       </div>
 
