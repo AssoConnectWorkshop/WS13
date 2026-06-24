@@ -82,6 +82,10 @@ For addresses and links you need the contact identifier (the \`@id\` shown when 
 
 ## How to Respond
 
+**One action per turn (STRICT).** A response contains AT MOST ONE \`\`\`json action block. Never put two or more action blocks in the same reply, and never batch several requests together. Do exactly ONE thing per turn — the single thing the user asked for. If the user asks for several distinct things, handle the first one now and offer to do the next one afterwards.
+
+**Do only what is asked.** Never invent or add extra fetches the user did not request (for example, do NOT also fetch "the latest contacts" on the side when the user only asked for a distribution chart).
+
 1. **First, ask clarifying questions.** Always confirm you understand before acting. For creation, restate every field you are about to create and ask the user to confirm — creation is permanent and cannot be undone from here.
 
 2. **To fetch data**, respond with:
@@ -158,6 +162,8 @@ You may ONLY:
 You are NOT allowed to do anything else. If the user asks to **update, modify, edit, replace, delete, remove, merge, archive** data — or any operation other than reading and creating — you must politely refuse and explain that you only have permission to view and create data, not to modify or delete it. Do NOT emit any JSON action in that case; just reply conversationally with the refusal.
 
 ## Important Rules
+- One action per turn: a reply is either conversational text OR exactly one JSON action block — never two or more action blocks, and never several requests at once.
+- Do only what the user explicitly asked. Do not add side requests of your own.
 - Ask at least one clarifying question before fetching, and always confirm the exact details before creating.
 - Never invent required identifiers (person/structure IRIs). If you don't have them, ask.
 - Be conversational and helpful.
@@ -200,18 +206,28 @@ export async function POST(request: NextRequest) {
     const textBlock = response.content.find((block) => block.type === 'text');
     const assistantMessage = textBlock?.type === 'text' ? textBlock.text : '';
 
-    // Parse Claude's intent (fetch, create, or clarification)
+    // Parse Claude's intent (fetch, create, or clarification). The model should
+    // emit at most one action block, but stay resilient: scan every fenced
+    // ```json block and act on the first valid one only — never more than a
+    // single action per turn.
     let parseError = false;
     let parsedAction: ParsedAction | null = null;
 
-    try {
-      const jsonMatch = assistantMessage.match(/```json\n([\s\S]*?)\n```/);
-      if (jsonMatch) {
-        parsedAction = JSON.parse(jsonMatch[1]);
+    const jsonBlocks = [...assistantMessage.matchAll(/```json\s*([\s\S]*?)```/g)];
+    for (const block of jsonBlocks) {
+      try {
+        parsedAction = JSON.parse(block[1].trim()) as ParsedAction;
+        break;
+      } catch {
+        parseError = true;
       }
-    } catch {
-      parseError = true;
     }
+    if (parsedAction) parseError = false;
+
+    // Never echo the raw JSON action back to the user — show only the prose.
+    const cleanContent =
+      assistantMessage.replace(/```json[\s\S]*?```/g, '').replace(/\n{3,}/g, '\n\n').trim();
+    const displayContent = cleanContent || parsedAction?.message || assistantMessage;
 
     // If Claude wants to fetch contacts, do it
     if (parsedAction?.status === 'ready_to_fetch' && parsedAction.action === 'fetch_contacts') {
@@ -228,7 +244,7 @@ export async function POST(request: NextRequest) {
 
         return NextResponse.json({
           role: 'assistant',
-          content: assistantMessage,
+          content: displayContent,
           data: filtered,
           visualizationType: parsedAction.visualizationType || 'table',
           status: 'data_ready',
@@ -306,7 +322,7 @@ export async function POST(request: NextRequest) {
     // Otherwise return Claude's conversational reply (clarification / confirmation request)
     return NextResponse.json({
       role: 'assistant',
-      content: assistantMessage,
+      content: displayContent,
       status: parseError ? 'clarification_needed' : 'processing',
     });
   } catch (error) {
